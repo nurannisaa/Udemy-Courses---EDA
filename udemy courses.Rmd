@@ -1,0 +1,207 @@
+---
+title: "Udemy Courses (EDA)"
+author: "Nur Annisa A"
+date: "11/2/2021"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(readr)
+library(tidyverse)
+library(dplyr)
+library(echarts4r)
+library(ggplot2)
+library(plotly)
+library(psych)
+
+## Load Data
+udemy_courses <- read_csv("~/BOOTCAMP DATA SCIENCE/portfolio/udemy_courses.csv")
+
+## See every column in the dataset and its type
+glimpse(udemy_courses)
+```
+```{r}
+# Check the missing value
+colSums(is.na(udemy_courses))
+# No missing value
+```
+
+```{r}
+## Identify and clean the duplicated data
+sum(duplicated(udemy_courses))
+
+## drop duplicated data
+distinct(udemy_courses)
+```
+```{r}
+## DataFrame Udemy Courses by Subject
+udemy_courses %>% 
+  # count the unique values of subject column 
+  count(subject) %>%
+  # call echarts object with subject as x axis
+  e_charts(subject) %>% 
+  # create pie chart with n as y axis and rename it as Courses Subject
+  e_pie(n, name = "Courses Subject", radius = c("50%", "70%")) %>% 
+  # add tooltip with item as trigger
+  e_tooltip("item") %>% 
+  # add echarts title as Courses Subject in the center
+  e_title("Courses Subject",
+          textAlign  = "center",
+          left ="50%") %>%
+  # show charts label as a percentage
+  e_labels(show = TRUE,
+           formatter = "{d}%",
+           position = "outer") %>%
+  # place the legend in the bottom 
+  e_legend(bottom = 10, 
+           orient = "horizontal")
+```
+```{r}
+# DataFrame Udemy Courses by level
+udemy_courses %>% 
+  # count the unique values of level column 
+  count(level) %>%
+  # call echarts object with level as x axis
+  e_charts(level) %>% 
+  # create pie chart with n as y axis and rename it as Courses Level
+  e_pie(n, name = "Courses Level", radius = c("50%", "70%")) %>% 
+  # add tooltip with item as trigger
+  e_tooltip("item") %>% 
+  # add echarts title as Courses Level in the center
+  e_title("Courses Level",
+          textAlign  = "center",
+          left ="50%") %>%
+  # show charts label as a percentage
+  e_labels(show = TRUE,
+           formatter = "{d}%",
+           position = "outer") %>%
+  # place the legend in the bottom 
+  e_legend(bottom = 10, 
+           orient = "horizontal")
+```
+```{r}
+# DataFrame Udemy Courses by Type (Paid/Free)
+udemy_courses %>% 
+  # Create new column with 'Paid' and 'Free' as the unique values
+  mutate(Type = ifelse(is_paid == "TRUE", "Paid", "Free")) %>% 
+  # count the unique values of Type column 
+  count(Type) %>%
+  # call echarts object with Type as x axis
+  e_charts(Type) %>% 
+  # create pie chart with n as y axis and rename it as Courses Type
+  e_pie(n, name = "Courses Type", radius = c("50%", "70%")) %>% 
+  # add tooltip with item as trigger
+  e_tooltip("item") %>% 
+  # add echarts title as Courses Type in the center
+  e_title("Courses Type",
+          textAlign  = "center",
+          left ="50%") %>%
+  # show charts label as a percentage
+  e_labels(show = TRUE,
+           formatter = "{d}%",
+           position = "outer") %>%
+  # place the legend in the bottom 
+  e_legend(bottom = 10, 
+           orient = "horizontal")
+```
+```{r}
+## see content duration distribution by the type using boxplot
+
+udemy_courses %>% 
+  mutate(Type = ifelse(is_paid == "TRUE", "Paid", "Free")) %>%
+  ggplot(aes(x = Type, y = content_duration, color=Type)) +
+  geom_boxplot(width=0.5,lwd=1) +
+  coord_flip()
+```
+```{r}
+## see content duration distribution by the level using boxplot 
+
+udemy_courses %>% 
+  ggplot(aes(x = level, y = content_duration, color=level)) +
+  geom_boxplot(width=0.5,lwd=1) +
+  coord_flip()
+```
+```{r}
+## see content duration distribution by the subject using boxplot
+
+udemy_courses %>% 
+  ggplot(aes(x = subject, y = content_duration, color=subject)) +
+  geom_boxplot(width=0.5,lwd=1) +
+  coord_flip()
+```
+```{r}
+## see price distribution by the subject using boxplot
+udemy_courses %>% 
+  ggplot(aes(x = subject, y = price, color=subject)) +
+  geom_boxplot(width=0.5,lwd=1) +
+  coord_flip()
+```
+```{r}
+## sort the data by num_subscribers column
+by_subsribers <- udemy_courses[order(-udemy_courses$num_subscribers),]
+
+## select data on the top 20 to find out the 20 most subscribed courses
+by_subsribers <- by_subsribers %>% slice(1:20)
+
+## plot the 20 most subscribed courses using barplot
+by_subsribers %>% 
+  ggplot(aes(x = reorder(course_title, num_subscribers), y = num_subscribers, fill = num_subscribers)) + 
+  geom_col() + 
+  labs(
+    x = "Title",
+    y = "Subscribers",
+    fill = "Subscribers"
+  ) + 
+  coord_flip()
+```
+```{r}
+## sort the data by price column
+by_price <- udemy_courses[order(-udemy_courses$price),]
+
+## select top 20 courses with the highest price
+by_price <- by_price %>% slice(1:20)
+
+## plot top 20 courses with the highest price using barplot
+by_price %>% 
+  ggplot(aes(x = reorder(course_title, price), y = price, fill = price)) + 
+  geom_col() + 
+  labs(
+    x = "Title",
+    y = "Price",
+    fill = "Price"
+  ) + 
+  coord_flip()
+```
+```{r}
+## sort the data by content_duration column
+by_duration <- udemy_courses[order(-udemy_courses$content_duration),]
+## select top 20 courses with the longest duration
+by_duration <- by_duration %>% slice(1:20)
+
+## plot top 20 courses with the longest duration using barplot
+by_duration %>% 
+  ggplot(aes(x = reorder(course_title, content_duration), y = content_duration, fill = content_duration)) + 
+  geom_col() + 
+  labs(
+    x = "Title",
+    y = "Duration",
+    fill = "Duration"
+  ) + 
+  coord_flip()
+```
+
+```{r}
+pairs.panels(udemy_courses, 
+             method = "pearson", # correlation method
+             hist.col = "#00AFBB",
+             density = TRUE,  # show density plots
+             ellipses = TRUE # show correlation ellipses
+)
+```
+

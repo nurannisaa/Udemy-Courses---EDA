@@ -1,0 +1,151 @@
+---
+title: "customer behaviour (EDA)"
+author: "Nur Annisa A"
+date: "11/9/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r cars}
+library(readr)
+library(tidyverse)
+library(dplyr)
+library(echarts4r)
+library(ggplot2)
+library(plotly)
+library(psych)
+## Load Data
+customer <- read_csv("~/BOOTCAMP DATA SCIENCE/portfolio/Customer_Behaviour.csv")
+
+## See every column in the dataset and its type
+glimpse(customer)
+```
+
+```{r}
+## Checking missing value
+colSums(is.na(customer))
+## No missing value :)
+
+## Checking duplicated rows
+sum(duplicated(customer))
+## No duplicated rows :)
+```
+
+```{r}
+## Create an interactive charts with echarts4r
+customer %>% 
+  ## count the unique values of Gender column (Male & Female)
+  count(Gender) %>%
+  ## call echarts object with gender as x axis
+  e_charts(Gender) %>% 
+  ## create pie chart with n as y axis and rename it as Gender
+  e_pie(n, name = "Gender", radius = c("50%", "70%")) %>% 
+  ## add tooltip with item as trigger
+  e_tooltip("item") %>% 
+  ## add echarts title as Customer Gender in the center
+  e_title("Customer Gender",
+          textAlign  = "center",
+          left ="50%") %>%
+  ## show charts label as a percentage
+  e_labels(show = TRUE,
+           formatter = "{d}%",
+           position = "outer") %>%
+  ## place the legend in the bottom 
+  e_legend(bottom = 10, 
+           orient = "horizontal")
+```
+
+```{r}
+## create new column (purchase) 'Purchase' and 'Not Purchase' as the unique value
+customer <- customer %>% 
+  mutate(purchase = ifelse(Purchased == 1, "Purchase", "Not Purchase")) 
+
+## Create an interactive charts with echarts4r
+customer %>% 
+  ## count the unique values of purchase column
+  count(purchase) %>%
+  ## call echarts object with purchase as x axis
+  e_charts(purchase) %>% 
+  ## create pie chart with n as y axis and rename it as Customer Purchase
+  e_pie(n, name = "Customer Purchase", radius = c("50%", "70%")) %>%
+  ## add tooltip with item as trigger
+  e_tooltip("item") %>% 
+  ## add echarts title as Customer Purchase in the center
+  e_title("Customer Purchase",
+          textAlign  = "center",
+          left ="50%") %>%
+  ## show charts label as a percentage
+  e_labels(show = TRUE,
+           formatter = "{d}%",
+           position = "outer") %>%
+  ## place the legend in the bottom 
+  e_legend(bottom = 10, 
+           orient = "horizontal")
+```
+
+```{r}
+##  present customer gender and purchase along with the frequency in the form of a table
+purchase_by_gender <- table(customer$Gender, customer$purchase)
+
+## create bar chart of customer purchases and group them by gender
+barplot(purchase_by_gender, main="Customer Purchases",
+  xlab="Gender", col=c("pink","lightblue"),
+  legend = rownames(purchase_by_gender), beside = TRUE) +
+  theme_bw()
+```
+
+```{r}
+## explore who makes purchases by age
+## explore it by boxplot
+customer %>% 
+  ggplot(aes(x = Age, y = purchase, color=purchase)) +
+  geom_boxplot(width=0.5,lwd=1) +
+  theme_bw()
+```
+
+
+```{r}
+## explore who makes purchases based on their salary
+## explore it by boxplot
+customer %>% 
+  ggplot(aes(x = EstimatedSalary, y = purchase, color=purchase)) +
+  geom_boxplot(width=0.5,lwd=1) +
+  theme_bw()
+```
+
+```{r}
+## explore who makes purchases by gender
+## explore it by boxplot
+customer %>% 
+  ggplot(aes(x = EstimatedSalary, y = Gender, color=Gender)) +
+  geom_boxplot(width=0.5,lwd=1) +
+  theme_bw()
+```
+
+```{r}
+## plot customer age and their salary to see if there is a correlation between the two variables
+customer %>% 
+  ggplot(aes(
+    x = Age, 
+    y = EstimatedSalary, 
+    color = Gender
+  )) +
+  # add layer: geometric form
+  geom_point() + 
+  # add black and white theme
+  theme_bw()
+```
+
+```{r}
+pairs.panels(customer, 
+             method = "pearson", # correlation method
+             hist.col = "#00AFBB",
+             density = TRUE,  # show density plots
+             ellipses = TRUE # show correlation ellipses
+)
+```
+
