@@ -3,6 +3,7 @@ title: "Udemy Courses (EDA)"
 author: "Nur Annisa A"
 date: "11/2/2021"
 output:
+  pdf_document: default
   html_document: default
 ---
 
